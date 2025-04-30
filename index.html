@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>iFrame Generator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #4A90E2, #7B4397);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    input, button {
+      width: 85%;
+      padding: 10px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    input {
+      background: rgba(255,255,255,0.9);
+      color: black;
+    }
+
+    button {
+      background: #ffffff;
+      color: #7B4397;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #ddd;
+    }
+
+    iframe {
+      width: 100%;
+      height: 315px;
+      margin-top: 15px;
+      border-radius: 10px;
+      border: none;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .video-item {
+      margin-bottom: 30px;
+      background: rgba(255,255,255,0.1);
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    .delete-btn {
+      background: crimson;
+      color: white;
+      margin-top: 10px;
+    }
+
+    .top-btn {
+      margin-top: 20px;
+    }
+
+    #rotateWarning {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      color: white;
+      z-index: 9999;
+      font-size: 24px;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    #rotateWarning h1 {
+      margin-right: 27px;
+    }
+
+    #rotateWarning.show {
+      display: flex;
+    }
+    
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+
+      input, button {
+        width: 100%;
+        font-size: 14px;
+      }
+
+      iframe {
+        height: 200px;
+      }
+
+      h2, h3 {
+        font-size: 18px;
+      }
+
+      .container {
+        padding: 15px;
+      }
+
+      #rotateWarning {
+        font-size: 18px;
+        padding: 15px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      iframe {
+        height: 180px;
+      }
+
+      .video-item {
+        padding: 10px;
+      }
+
+      button {
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="rotateWarning"><h1>Silakan putar layar ke mode horizontal</h1></div>
+
+  <div class="container">
+    <!-- Generator -->
+    <div id="page1">
+      <h2>Tambah Video Ayang Kei</h2>
+      <input type="text" id="judul" placeholder="Judul video">
+      <input type="url" id="link" placeholder="Link iframe (embed)">
+      <button onclick="tambahVideo()">Tambah Video</button>
+      <button class="top-btn" onclick="gantiHalaman()">Lihat Daftar Video</button>
+    </div>
+
+    <!-- Daftar Video -->
+    <div id="page2" class="hidden">
+      <h2>Daftar Video Ayang Kei</h2>
+      <div id="daftarVideo"></div>
+      <button class="top-btn" onclick="gantiHalaman()">Kembali ke Generator</button>
+    </div>
+  </div>
+
+  <script>
+    let videoList = [];
+
+    function loadVideo() {
+      const saved = localStorage.getItem("videoList");
+      videoList = saved ? JSON.parse(saved) : [];
+      tampilkanVideo();
+    }
+
+    function simpanVideo() {
+      localStorage.setItem("videoList", JSON.stringify(videoList));
+    }
+
+    function tambahVideo() {
+      const judul = document.getElementById("judul").value.trim();
+      const link = document.getElementById("link").value.trim();
+
+      if (!judul || !link) {
+        alert("Isi judul dan link dulu ya ayang~");
+        return;
+      }
+
+      videoList.push({ judul, link });
+      simpanVideo();
+      document.getElementById("judul").value = "";
+      document.getElementById("link").value = "";
+      alert("Video ditambahkan, ayang~");
+    }
+
+    function tampilkanVideo() {
+      const container = document.getElementById("daftarVideo");
+      container.innerHTML = "";
+
+      if (videoList.length === 0) {
+        container.innerHTML = "<p>Belum ada video ditambahkan~</p>";
+        return;
+      }
+
+      videoList.forEach((video, index) => {
+        const item = document.createElement("div");
+        item.className = "video-item";
+        item.innerHTML = `
+          <h3>${video.judul}</h3>
+          <iframe src="${video.link}" allowfullscreen></iframe>
+          <button class="delete-btn" onclick="hapusVideo(${index})">Hapus</button>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function hapusVideo(index) {
+      if (confirm("Yakin mau hapus video ini?")) {
+        videoList.splice(index, 1);
+        simpanVideo();
+        tampilkanVideo();
+      }
+    }
+
+    function gantiHalaman() {
+      const page1 = document.getElementById("page1");
+      const page2 = document.getElementById("page2");
+      const isPage1Visible = !page1.classList.contains("hidden");
+
+      if (isPage1Visible) {
+        page1.classList.add("hidden");
+        page2.classList.remove("hidden");
+        tampilkanVideo();
+      } else {
+        page2.classList.add("hidden");
+        page1.classList.remove("hidden");
+      }
+    }
+
+    function cekOrientasi() {
+      const warning = document.getElementById("rotateWarning");
+      if (window.innerHeight > window.innerWidth) {
+        warning.classList.add("show");
+      } else {
+        warning.classList.remove("show");
+      }
+    }
+
+    window.addEventListener("load", () => {
+      loadVideo();
+      cekOrientasi();
+    });
+
+    window.addEventListener("resize", cekOrientasi);
+    window.addEventListener("orientationchange", cekOrientasi);
+  </script>
+</body>
+</html>
